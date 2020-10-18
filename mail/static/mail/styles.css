@@ -1,0 +1,19 @@
+textarea {
+    min-height: 400px;
+}
+
+.read {
+    background-color: grey;
+}
+
+.archive {
+    border: 2px solid black;
+}
+
+.sent {
+    border: 2px solid black;
+}
+
+.inbox {
+    border: 2px solid black;
+}
