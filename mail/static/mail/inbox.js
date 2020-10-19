@@ -5,9 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
-  // attaching event listener to s'more buttoonz
-  
-
+  document.getElementById('compose-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    send_email();
+  })
   // By default, load the inbox
   load_mailbox('inbox');
 });
@@ -25,10 +27,6 @@ function compose_email() {
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
 
-  $('#compose-form').submit(function(e){
-    send_email();
-    return false;
-  })
 }
 
 
@@ -66,9 +64,7 @@ function load_mailbox(mailbox) {
           emails.forEach(email => {
             const emailEntry = createEmailEntry(email)
             emailEntry.classList.add("inbox")
-            emailEntry.addEventListener('click', function() {
-              showEmail(email)
-            });
+
             emailEntries.appendChild(emailEntry)
           });
           document.querySelector("#emails-view").appendChild(emailEntries)
@@ -79,7 +75,6 @@ function load_mailbox(mailbox) {
       fetch('/emails/archive')
       .then(response => response.json())
       .then(emails => {
-        console.log(emails)
         emailEntries = document.createElement("div")
         emails.forEach(email => {
           const emailEntry = createEmailEntry(email)
@@ -108,10 +103,10 @@ function send_email() {
   .then(response => response.json())
   .then(result => {
       if (result.error) {
-        console.log(result.error);
         const error = document.createElement('h1');
         error.innerHTML = result.error;
         document.querySelector('#compose-view').append(error);
+        return false;
       } 
       else {
         load_mailbox('sent')
@@ -127,7 +122,9 @@ const createEmailEntry = (email) => {
   }
   entry.innerText = `${email.sender} - ${email.subject} - ${email.timestamp}`
   // create link to show page
-
+  entry.addEventListener('click', function() {
+    showEmail(email)
+  });
   return entry
 }
 
@@ -152,9 +149,10 @@ const showPage = (email) => {
   emailFull.appendChild(body)
   // link to reply method
   // to do
-  showView.appendChild(replyButton(email))
-  showView.appendChild(archive_button(email))
+  showView.appendChild(createReplyButton(email))
+  showView.appendChild(createArchiveButton(email))
   showView.appendChild(emailFull)
+  return showView
 }
 
 
@@ -168,7 +166,7 @@ const showEmail = (email) => {
 }
 
 
-const archive_button = (email) => {
+const createArchiveButton = (email) => {
   const archiveButton = document.createElement("button");
   if (!email.archived) {
     archiveButton.innerText = "Archive"
@@ -205,8 +203,17 @@ const markAsRead = (email) => {
 }
 
 
-const replyButton = (email) => {
-
+const createReplyButton = (email) => {
+  replyButton = document.createElement("button");
+  replyButton.innerText = "Reply"
+  subjectLine = email.subject.slice(0,3) == "Re:" ?  email.subject : `Re: ${email.subject}`
+  replyButton.addEventListener('click', function() { 
+      compose_email()
+      document.querySelector('#compose-recipients').value = email.sender,
+      document.querySelector('#compose-subject').value = subjectLine,
+      document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote: ${email.body}`
   // reformat email data to prefill data
   // load compose view with prefill data
+  })
+  return replyButton
 }

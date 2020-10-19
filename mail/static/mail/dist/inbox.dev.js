@@ -1,5 +1,7 @@
 "use strict";
 
+function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only"); }
+
 document.addEventListener('DOMContentLoaded', function () {
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', function () {
@@ -26,7 +28,8 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
-  $('#compose-form').submit(function (e) {
+  document.getElementById('compose-form').addEventListener('submit', function (e) {
+    e.preventDefault();
     send_email();
     return false;
   });
@@ -63,9 +66,6 @@ function load_mailbox(mailbox) {
         emails.forEach(function (email) {
           var emailEntry = createEmailEntry(email);
           emailEntry.classList.add("inbox");
-          emailEntry.addEventListener('click', function () {
-            showEmail(email);
-          });
           emailEntries.appendChild(emailEntry);
         });
         document.querySelector("#emails-view").appendChild(emailEntries);
@@ -76,7 +76,6 @@ function load_mailbox(mailbox) {
       fetch('/emails/archive').then(function (response) {
         return response.json();
       }).then(function (emails) {
-        console.log(emails);
         emailEntries = document.createElement("div");
         emails.forEach(function (email) {
           var emailEntry = createEmailEntry(email);
@@ -103,10 +102,10 @@ function send_email() {
     return response.json();
   }).then(function (result) {
     if (result.error) {
-      console.log(result.error);
       var error = document.createElement('h1');
       error.innerHTML = result.error;
       document.querySelector('#compose-view').append(error);
+      return false;
     } else {
       load_mailbox('sent');
     }
@@ -122,6 +121,9 @@ var createEmailEntry = function createEmailEntry(email) {
 
   entry.innerText = "".concat(email.sender, " - ").concat(email.subject, " - ").concat(email.timestamp); // create link to show page
 
+  entry.addEventListener('click', function () {
+    showEmail(email);
+  });
   return entry;
 };
 
@@ -143,10 +145,11 @@ var showPage = function showPage(email) {
   emailFull.appendChild(subject);
   emailFull.appendChild(body); // link to reply method
   // to do
+  // showView.appendChild(replyButton(email))
 
-  showView.appendChild(replyButton(email));
   showView.appendChild(archive_button(email));
   showView.appendChild(emailFull);
+  return showView;
 };
 
 var showEmail = function showEmail(email) {
@@ -195,6 +198,11 @@ var markAsRead = function markAsRead(email) {
   });
 };
 
-var replyButton = function replyButton(email) {// reformat email data to prefill data
+var _replyButton = function replyButton(email) {
+  _replyButton = (_readOnlyError("replyButton"), document.createElement("button"));
+  document.querySelector('#compose-recipients').value = email.sender;
+  document.querySelector('#compose-subject').value = "RE: ".concat(email.subject); // reformat email data to prefill data
   // load compose view with prefill data
+
+  return _replyButton;
 };
