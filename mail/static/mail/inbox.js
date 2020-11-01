@@ -40,9 +40,8 @@ function load_mailbox(mailbox) {
   document.querySelector("#compose-view").style.display = "none";
 
   // Show the mailbox name
-  document.querySelector("#emails-view").innerHTML = `<h3>${
-    mailbox.charAt(0).toUpperCase() + mailbox.slice(1)
-  }</h3>`;
+  document.querySelector("#emails-view").innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)
+    }</h3>`;
 
   // case statement load emails
   switch (mailbox) {
@@ -95,13 +94,13 @@ function send_email() {
   // try to submit email if user doesn't exist print error
   // else redirect to inbox
   fetch("/emails", {
-      method: "POST",
-      body: JSON.stringify({
-        recipients: document.querySelector("#compose-recipients").value,
-        subject: document.querySelector("#compose-subject").value,
-        body: document.querySelector("#compose-body").value,
-      }),
-    })
+    method: "POST",
+    body: JSON.stringify({
+      recipients: document.querySelector("#compose-recipients").value,
+      subject: document.querySelector("#compose-subject").value,
+      body: document.querySelector("#compose-body").value,
+    }),
+  })
     .then((response) => response.json())
     .then((result) => {
       if (result.error) {
@@ -215,10 +214,10 @@ const createReplyButton = (email) => {
   replyButton.addEventListener("click", function () {
     compose_email();
     (document.querySelector("#compose-recipients").value = email.sender),
-    (document.querySelector("#compose-subject").value = subjectLine),
-    (document.querySelector(
-      "#compose-body"
-    ).value = `On ${email.timestamp} ${email.sender} wrote: ${email.body}`);
+      (document.querySelector("#compose-subject").value = subjectLine),
+      (document.querySelector(
+        "#compose-body"
+      ).value = `On ${email.timestamp} ${email.sender} wrote: ${email.body}`);
     // reformat email data to prefill data
     // load compose view with prefill data
   });
