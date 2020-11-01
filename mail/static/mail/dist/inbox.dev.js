@@ -1,7 +1,5 @@
 "use strict";
 
-function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only"); }
-
 document.addEventListener('DOMContentLoaded', function () {
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', function () {
@@ -13,8 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#archived').addEventListener('click', function () {
     return load_mailbox('archive');
   });
-  document.querySelector('#compose').addEventListener('click', compose_email); // attaching event listener to s'more buttoonz
-  // By default, load the inbox
+  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.getElementById('compose-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    send_email();
+  }); // By default, load the inbox
 
   load_mailbox('inbox');
 });
@@ -28,11 +30,6 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
-  document.getElementById('compose-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    send_email();
-    return false;
-  });
 }
 
 function load_mailbox(mailbox) {
@@ -136,18 +133,21 @@ var showPage = function showPage(email) {
 
   var emailFull = document.createElement("ul");
   var subject = document.createElement("li");
-  subject.innerHTML = email.subject;
+  subject.innerHTML = "Subject: ".concat(email.subject);
   var recipients = document.createElement("li");
-  recipients.innerHTML = email.recipients;
+  recipients.innerHTML = "Recipients: ".concat(email.recipients);
+  var sender = document.createElement("li");
+  sender.innerHTML = "Sender: ".concat(email.sender);
   var body = document.createElement("li");
-  body.innerHTML = email.body;
+  body.innerHTML = "Body: ".concat(email.body);
   emailFull.appendChild(recipients);
   emailFull.appendChild(subject);
+  emailFull.appendChild(sender);
   emailFull.appendChild(body); // link to reply method
   // to do
-  // showView.appendChild(replyButton(email))
 
-  showView.appendChild(archive_button(email));
+  showView.appendChild(createReplyButton(email));
+  showView.appendChild(createArchiveButton(email));
   showView.appendChild(emailFull);
   return showView;
 };
@@ -161,7 +161,7 @@ var showEmail = function showEmail(email) {
   entry = showPage(email);
 };
 
-var archive_button = function archive_button(email) {
+var createArchiveButton = function createArchiveButton(email) {
   var archiveButton = document.createElement("button");
 
   if (!email.archived) {
@@ -172,7 +172,9 @@ var archive_button = function archive_button(email) {
         body: JSON.stringify({
           archived: true
         })
-      }).then(load_mailbox("archive"));
+      }).then(function () {
+        load_mailbox("archive");
+      });
     });
   } else {
     archiveButton.innerText = "Unarchive";
@@ -182,7 +184,9 @@ var archive_button = function archive_button(email) {
         body: JSON.stringify({
           archived: false
         })
-      }).then(load_mailbox("archive"));
+      }).then(function () {
+        load_mailbox("archive");
+      });
     });
   }
 
@@ -198,11 +202,14 @@ var markAsRead = function markAsRead(email) {
   });
 };
 
-var _replyButton = function replyButton(email) {
-  _replyButton = (_readOnlyError("replyButton"), document.createElement("button"));
-  document.querySelector('#compose-recipients').value = email.sender;
-  document.querySelector('#compose-subject').value = "RE: ".concat(email.subject); // reformat email data to prefill data
-  // load compose view with prefill data
-
-  return _replyButton;
+var createReplyButton = function createReplyButton(email) {
+  replyButton = document.createElement("button");
+  replyButton.innerText = "Reply";
+  subjectLine = email.subject.slice(0, 3) == "Re:" ? email.subject : "Re: ".concat(email.subject);
+  replyButton.addEventListener('click', function () {
+    compose_email();
+    document.querySelector('#compose-recipients').value = email.sender, document.querySelector('#compose-subject').value = subjectLine, document.querySelector('#compose-body').value = "On ".concat(email.timestamp, " ").concat(email.sender, " wrote: ").concat(email.body); // reformat email data to prefill data
+    // load compose view with prefill data
+  });
+  return replyButton;
 };
